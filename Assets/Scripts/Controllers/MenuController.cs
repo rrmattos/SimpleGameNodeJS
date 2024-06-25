@@ -100,7 +100,7 @@ public class MenuController : MonoBehaviour
         }
     }
     
-    public void VerifyPasswordToken()
+    public async void VerifyPasswordToken()
     {
         if (string.IsNullOrEmpty(inputTokenPass.text))
         {
@@ -108,8 +108,8 @@ public class MenuController : MonoBehaviour
             return;
         }
         
-        bool isCorrect = api.CallVerifyResetToken(inputTokenPass.text);
-        if(isCorrect) ChangeCanvasGroup(2);
+        long responseCode = await api.VerifyResetToken(inputTokenPass.text);
+        if(responseCode == 200) ChangeCanvasGroup(2);
     }
     
     public void ChangePassword()

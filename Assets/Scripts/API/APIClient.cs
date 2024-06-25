@@ -31,17 +31,6 @@ public class APIClient : MonoBehaviour
     #region --- HTTP USER ---
         
     #region --- Functions ---
-    public bool CallVerifyResetToken(string _token)
-    {
-        bool isCorrect = false;
-        StartCoroutine(VerifyResetToken(_token, (bool _isCorrect) =>
-        {
-            Debug.Log("Token verification result: " + _isCorrect);
-            isCorrect = _isCorrect;
-        }));
-        return isCorrect;
-    }
-    
     public void CallChangePassword(string _newPassword)
     {
         StartCoroutine(ChangePassword(_newPassword));
@@ -111,7 +100,7 @@ public class APIClient : MonoBehaviour
         }
         else
         {
-            FeedbackController.Instance.SendMessage("Error: " + request.error, new Color32(173, 38, 39, 255));
+            FeedbackController.Instance.ShowMessage("Error: " + request.error, new Color32(173, 38, 39, 255));
             return request.responseCode;
         }
     }
@@ -154,7 +143,7 @@ public class APIClient : MonoBehaviour
         }
     }
     
-    IEnumerator VerifyResetToken(string _token, Action<bool> _callback)
+    public async Task<long> VerifyResetToken(string _token)
     {
         string url = "http://localhost:3000/api/verify-reset-token";
         TokenResponse tokenData = new TokenResponse { token = _token };
@@ -166,20 +155,23 @@ public class APIClient : MonoBehaviour
         request.downloadHandler = new DownloadHandlerBuffer();
         request.SetRequestHeader("Content-Type", "application/json");
         
-        //request.SetRequestHeader("Cookie", sessionCookie);
+        var operation = request.SendWebRequest();
         
-        yield return request.SendWebRequest();
+        while (!operation.isDone)
+        {
+            await Task.Yield();
+        }
 
         if (request.result == UnityWebRequest.Result.Success)
         {
             Debug.Log("Token válido.");
             tokenPass = _token;
-            _callback(true);
+            return 200;
         }
         else
         {
             FeedbackController.Instance.ShowMessage("Error: " + request.error, new Color32(173, 38, 39, 255));
-            _callback(false);
+            return request.responseCode;
         }
     }
     
